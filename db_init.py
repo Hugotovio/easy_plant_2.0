@@ -8,18 +8,17 @@ def init_db():
     CREATE TABLE IF NOT EXISTS liquidaciones (
         id INT AUTO_INCREMENT PRIMARY KEY,
         tanque INT NOT NULL,
-        api DECIMAL(5,2) NOT NULL,
-        temperatura DECIMAL(5,2) NOT NULL,
-        volumen_recibido DECIMAL(10,2) NOT NULL,
-        volumen_calculado DECIMAL(10,2) NOT NULL,
-        tolerancia DECIMAL(10,2) NOT NULL,
-        diferencia DECIMAL(10,2) NOT NULL,
-        resultado VARCHAR(20) NOT NULL,
-        fecha DATETIME NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        api FLOAT,
+        temperatura FLOAT,
+        volumen_recibido FLOAT,
+        volumen_calculado FLOAT,
+        tolerancia FLOAT,
+        diferencia FLOAT,
+        resultado VARCHAR(20),
+        fecha DATETIME
     )
     """)
 
-    conn.commit()
     cursor.close()
     conn.close()
+    print("✅ Tabla liquidaciones verificada / creada")
