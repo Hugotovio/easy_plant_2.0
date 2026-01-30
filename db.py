@@ -1,9 +1,12 @@
+import os
 import mysql.connector
 
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="",   # XAMPP por defecto no tiene contraseña
-        database="easy_plant"
+        host=os.getenv("MYSQLHOST", "localhost"),
+        port=int(os.getenv("MYSQLPORT", 3306)),
+        user=os.getenv("MYSQLUSER", "root"),
+        password=os.getenv("MYSQLPASSWORD", ""),
+        database=os.getenv("MYSQLDATABASE", "easy_plant"),
+        autocommit=True
     )

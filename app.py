@@ -6,8 +6,12 @@ from datetime import datetime, timedelta
 from db_liquidaciones import guardar_liquidacion, obtener_inventario_actual
 import os
 import pytz
+from db_init import init_db
+
 
 app = Flask(__name__)
+# Inicializar la base de datos al iniciar la aplicación
+init_db()
 
 # =========================
 # RUTA PRINCIPAL
