@@ -4,37 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Easy Plant</title>
+
+    <!-- CSS existente -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
+
 <body>
     <div class="container mt-5">
         <div class="form-container d-flex justify-content-between align-items-center">
             <h1>Easy Plant</h1>
-            <div class="version">
-    </div>
-        
+            <div class="version"></div>
+        </div>
+
+        <!-- FORMULARIO ORIGINAL (SIN CAMBIOS) -->
         <form id="calculation-form">
             <div class="form-group">
                 <label for="numero">Número del tanque</label>
                 <input type="number" id="numero" name="numero" class="form-control" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="altura_inicial">Altura inicial (mm):</label>
                 <input type="number" id="altura_inicial" name="altura_inicial" class="form-control" step="any" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="volumen_recibido">Volumen bruto recibido (galones):</label>
                 <input type="number" id="volumen_recibido" name="volumen_recibido" class="form-control" step="any" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="api_observado">Api Observado:</label>
                 <input type="number" id="api_observado" name="api_observado" class="form-control" step="any" required>
             </div>
-            
+
             <div class="form-group">
                 <label for="temperatura">Temperatura (°F):</label>
                 <input type="number" id="temperatura" name="temperatura" class="form-control" step="0.1" required>
@@ -44,59 +48,62 @@
                 <label for="hora_finalizacion">Hora de finalización (HH:MM):</label>
                 <input type="time" id="hora_finalizacion" name="hora_finalizacion" class="form-control">
             </div>
-            
+
+            <!-- BOTÓN ORIGINAL -->
             <button type="submit" class="btn btn-danger">LIQUIDAR</button>
+
+            <!-- 🆕 BOTÓN NUEVO DENSIDAD -->
+            <button
+                type="button"
+                class="btn btn-secondary mt-3 ml-2"
+                data-toggle="modal"
+                data-target="#densidadModal">
+                DENSIDAD
+            </button>
         </form>
-        
+
+        <!-- RESULTADOS EXISTENTES -->
         <div id="results" class="mt-4"></div>
     </div>
 
-    <script>
-        document.getElementById('calculation-form').addEventListener('submit', function(event) {
-            event.preventDefault();
+    <!-- 🆕 MODAL DE DENSIDAD -->
+    <div class="modal fade" id="densidadModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
 
-            const formData = new FormData(this);
-            const data = Object.fromEntries(formData.entries());
-            console.log(data);  // Para depuración
+                <div class="modal-header">
+                    <h5 class="modal-title">Cálculo de Densidad</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
 
-            fetch('/calculate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            })
-            .then(response => response.json())
-            .then(result => {
-                if (result.error) {
-                    document.getElementById('results').innerHTML = `<p class="bold">Error: ${result.error}</p>`;
-                } else {
-                    let tableHtml = `
-                        <table class="result-table">
-                            <tbody>
-                                <tr><td>Número del Tanque:</td><td class="bold">${data.numero}</td></tr>
-                                <tr><td>Altura Inicial:</td><td class="bold">${result.altura_inicial} mm.</td></tr>
-                                <tr><td>Volumen Inicial:</td><td class="bold">${result.volumen_inicial}.Gls</td></tr>
-                                <tr><td>Altura Final:</td><td class="bold">${result.altura_final} mm.</td></tr>
-                                <tr><td>Volumen Final:</td><td class="bold">${result.volumen_final}.Gls</td></tr>
-                                <tr><td>Volumen Bruto Recibido:</td><td class="bold">${result.volumen_br_rec.toFixed(2)}.Gls</td></tr>
-                                <tr><td>Temperatura:</td><td class="bold">${result.temperatura} °F</td></tr>
-                                <tr><td>API Observado:</td><td class="bold">${result.api_observado}</td></tr>
-                                <tr><td>API Corregido:</td><td class="bold">${result.api_corregido}</td></tr>
-                                <tr><td>Factor de Corrección:</td><td class="bold">${result.fac_cor}</td></tr>
-                                <tr><td>Volumen Neto Recibido:</td><td class="bold">${result.vol_neto_rec.toFixed(2)}.Gls</td></tr>
-                                <tr><td>Fecha de Finalización de Recibo:</td><td class="bold">${result.fecha_finalizacion_recibo}</td></tr>
-                                <tr><td>Hora de Finalización de Recibo:</td><td class="bold">${result.hora_finalizacion_recibo}</td></tr>
-                                <tr><td>Fecha de Liberación:</td><td class="bold">${result.fecha_liberacion}</td></tr>
-                                <tr><td>Hora de Liberación:</td><td class="bold">${result.hora_liberacion}</td></tr>
-                            </tbody>
-                        </table>
-                    `;
-                    document.getElementById('results').innerHTML = tableHtml;
-                }
-            })
-            .catch(error => {
-                document.getElementById('results').innerHTML = `<p class="bold">Error: ${error.message}</p>`;
-            });
-        });
-    </script>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Temperatura (°F)</label>
+                        <input type="number" id="temp_densidad" class="form-control">
+                    </div>
+
+                    <div class="form-group">
+                        <label>API</label>
+                        <input type="number" step="0.1" id="api_densidad" class="form-control">
+                    </div>
+
+                    <button class="btn btn-danger" onclick="calcularDensidad()">
+                        Calcular
+                    </button>
+
+                    <div id="resultadoDensidad" class="mt-3 font-weight-bold"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- JS EXTERNOS -->
+    <script src="{{ url_for('static', filename='js/liquidacion.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/densidad.js') }}"></script>
+
+    <!-- Bootstrap -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
