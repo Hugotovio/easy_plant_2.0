@@ -24,7 +24,8 @@ def index():
 @app.route('/calculate', methods=['POST'])
 def calculate():
     try:
-        data = request.json
+        data = request.form
+
 
         # -------------------------
         # VALIDACIONES BÁSICAS
