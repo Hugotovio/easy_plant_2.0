@@ -5,9 +5,12 @@ from datos import DataLoader
 from datetime import datetime, timedelta
 import os
 import pytz
-from liquidaciones import guardar_liquidacion
+
+
 
 app = Flask(__name__)
+# Inicializar la base de datos al iniciar la aplicación
+
 
 # =========================
 # RUTA PRINCIPAL
@@ -16,14 +19,14 @@ app = Flask(__name__)
 def index():
     return render_template('easy.html')
 
+
 # =========================
 # CALCULAR Y GUARDAR
 # =========================
 @app.route('/calculate', methods=['POST'])
 def calculate():
     try:
-        # 👇 FORMULARIO HTML (NO JSON)
-        data = request.form
+        data = request.json
 
         # -------------------------
         # VALIDACIONES BÁSICAS
@@ -124,24 +127,23 @@ def calculate():
         hora_liberacion_formateada = hora_liberacion.strftime('%H:%M')
 
         # -------------------------
-        # GUARDAR LIQUIDACIÓN (MYSQL)
+        # GUARDAR EN MYSQL
         # -------------------------
-        try:
-            guardar_liquidacion(
-                tanque=f"TK-{numerotk}",
-                altura_inicial=altura_inicial,
-                altura_final=int(altura_final),
-                volumen_bruto=vol_br_rec,
-                volumen_neto=vol_neto_rec,
-                api_observado=api_observado,
-                api_corregido=api_corregido,
-                temperatura=temperatura,
-                resultado=resultado,
-                fecha=tiempo_actual.strftime('%Y-%m-%d'),
-                hora=tiempo_actual.strftime('%H:%M:%S')
-            )
-        except Exception as e:
-            print("❌ ERROR GUARDANDO EN MYSQL:", e)
+        """
+        guardar_liquidacion({
+            "tanque": numerotk,
+            "api": api_observado,
+            "temperatura": temperatura,
+            "volumen_recibido": volumen_recibido,
+            "volumen_calculado": vol_neto_rec,
+            "tolerancia": tolerancia,
+            "diferencia": diferencia,
+            "resultado": resultado,
+            "fecha": tiempo_actual
+        })
+        """
+        
+        # ###
 
         # -------------------------
         # RESPUESTA
@@ -167,6 +169,21 @@ def calculate():
     except Exception as e:
         return jsonify({'error': str(e)})
 
+
+# =========================
+# INVENTARIO ACTUAL ✅
+# =========================
+@app.route('/inventario', methods=['GET'])
+def inventario():
+    try:
+        data = obtener_inventario_actual()
+        return jsonify(data)
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+@app.route("/inventario-vista")
+def inventario_vista():
+    return render_template("inventario.html")
 # =========================
 # MAIN
 # =========================
