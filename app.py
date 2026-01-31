@@ -6,6 +6,8 @@ from datetime import datetime, timedelta
 from db_liquidaciones import guardar_liquidacion, obtener_inventario_actual
 import os
 import pytz
+from db_init import init_db
+
 
 
 
@@ -130,7 +132,7 @@ def calculate():
         # -------------------------
         # GUARDAR EN MYSQL
         # -------------------------
-        """
+        
         guardar_liquidacion({
             "tanque": numerotk,
             "api": api_observado,
@@ -142,7 +144,7 @@ def calculate():
             "resultado": resultado,
             "fecha": tiempo_actual
         })
-        """
+        
         
         # ###
 
@@ -189,5 +191,6 @@ def inventario_vista():
 # MAIN
 # =========================
 if __name__ == '__main__':
+    init_db()
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
