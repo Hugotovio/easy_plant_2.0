@@ -5,6 +5,7 @@ from datos import DataLoader
 from datetime import datetime, timedelta
 import os
 import pytz
+from liquidaciones import guardar_liquidacion
 
 
 
@@ -123,7 +124,23 @@ def calculate():
         fecha_liberacion = hora_liberacion.strftime('%d-%m-%Y')
         hora_liberacion_formateada = hora_liberacion.strftime('%H:%M')
 
-       
+        # -------------------------
+# GUARDAR LIQUIDACIÓN EN MYSQL (RAILWAY)
+# -------------------------
+        guardar_liquidacion(
+            tanque=f"TK-{numerotk}",
+            altura_inicial=altura_inicial,
+            altura_final=altura_final,
+            volumen_bruto=vol_br_rec,
+            volumen_neto=vol_neto_rec,
+            api_observado=api_observado,
+            api_corregido=api_corregido,
+            temperatura=temperatura,
+            resultado=resultado,
+            fecha=tiempo_actual.strftime('%Y-%m-%d'),
+            hora=tiempo_actual.strftime('%H:%M:%S')
+        )
+
 
         # -------------------------
         # RESPUESTA
