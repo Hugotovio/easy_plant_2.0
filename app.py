@@ -5,12 +5,11 @@ from datos import DataLoader
 from datetime import datetime, timedelta
 import os
 import pytz
-from db import crear_tabla_liquidaciones_oca
-from liquidaciones import guardar_liquidacion
 
 
 
 app = Flask(__name__)
+# Inicializar la base de datos al iniciar la aplicación
 
 
 # =========================
@@ -112,7 +111,7 @@ def calculate():
         # -------------------------
         tolerancia = volumen_recibido * 0.002
         diferencia = vol_neto_rec - volumen_recibido
-        resultado = ""
+        resultado = "FALTANTE" if diferencia < -tolerancia else "CONFORME"
 
         # -------------------------
         # CÁLCULO FECHA / HORA LIBERACIÓN
@@ -130,20 +129,19 @@ def calculate():
         # -------------------------
         # GUARDAR EN MYSQL
         # -------------------------
-        
-        guardar_liquidacion(
-            tanque=numerotk,
-            api=api_observado,
-            temperatura=temperatura,
-            volumen_recibido=volumen_recibido,
-            volumen_calculado=vol_neto_rec,
-            tolerancia=tolerancia,
-            diferencia=diferencia,
-            resultado=resultado,
-            fecha=tiempo_actual
-        )
-
-        
+        """
+        guardar_liquidacion({
+            "tanque": numerotk,
+            "api": api_observado,
+            "temperatura": temperatura,
+            "volumen_recibido": volumen_recibido,
+            "volumen_calculado": vol_neto_rec,
+            "tolerancia": tolerancia,
+            "diferencia": diferencia,
+            "resultado": resultado,
+            "fecha": tiempo_actual
+        })
+        """
         
         # ###
 

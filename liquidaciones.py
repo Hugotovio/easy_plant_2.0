@@ -1,61 +1,52 @@
-from db import get_connection, crear_tabla_liquidaciones_oca
+from db import get_connection
 
 def guardar_liquidacion(
     tanque,
-    api,
+    altura_inicial,
+    altura_final,
+    volumen_bruto,
+    volumen_neto,
+    api_observado,
+    api_corregido,
     temperatura,
-    volumen_recibido,
-    volumen_calculado,
-    tolerancia,
-    diferencia,
     resultado,
-    fecha
+    fecha,
+    hora
 ):
-    # -------------------------
-    # VALIDACIÓN ANTI-None
-    # -------------------------
-    if None in (
-        tanque,
-        api,
-        temperatura,
-        volumen_recibido,
-        volumen_calculado,
-        tolerancia,
-        diferencia,
-        resultado,
-        fecha
-    ):
-        raise ValueError("❌ Hay campos None en guardar_liquidacion_oca")
-
     conn = get_connection()
     cursor = conn.cursor()
 
     sql = """
-        INSERT INTO liquidaciones_oca (
+        INSERT INTO liquidaciones (
             tanque,
-            api,
+            altura_inicial,
+            altura_final,
+            volumen_bruto,
+            volumen_neto,
+            api_observado,
+            api_corregido,
             temperatura,
-            volumen_recibido,
-            volumen_calculado,
-            tolerancia,
-            diferencia,
             resultado,
-            fecha
-        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            fecha,
+            hora
+        )
+        VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
     """
 
-    cursor.execute(sql, (
-        str(tanque),
-        float(api),
-        float(temperatura),
-        float(volumen_recibido),
-        float(volumen_calculado),
-        float(tolerancia),
-        float(diferencia),
+    valores = (
+        tanque,
+        altura_inicial,
+        altura_final,
+        volumen_bruto,
+        volumen_neto,
+        api_observado,
+        api_corregido,
+        temperatura,
         resultado,
-        fecha
-    ))
+        fecha,
+        hora
+    )
 
-    conn.commit()
+    cursor.execute(sql, valores)
     cursor.close()
     conn.close()
