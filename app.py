@@ -11,9 +11,7 @@ from liquidaciones import guardar_liquidacion
 
 
 app = Flask(__name__)
-# Inicializar la base de datos al iniciar la aplicación
-with app.app_context():
-    crear_tabla_liquidaciones_oca()
+
 
 # =========================
 # RUTA PRINCIPAL

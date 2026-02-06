@@ -2,7 +2,10 @@ import os
 import mysql.connector
 from mysql.connector import Error
 from dotenv import load_dotenv
-load_dotenv()
+# ⚠️ SOLO carga .env si estás en local
+if os.getenv("RAILWAY_ENVIRONMENT") is None:
+    from dotenv import load_dotenv
+    load_dotenv()
 
 
 def get_connection():
