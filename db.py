@@ -1,50 +1,42 @@
 import os
 import mysql.connector
-from mysql.connector import Error
-from dotenv import load_dotenv
-# ⚠️ SOLO carga .env si estás en local
-if os.getenv("RAILWAY_ENVIRONMENT") is None:
-    from dotenv import load_dotenv
-    load_dotenv()
 
+# 🔹 SOLO carga .env si estás en LOCAL
+if os.getenv("RAILWAY_ENVIRONMENT") is None:
+    try:
+        from dotenv import load_dotenv
+        load_dotenv()
+    except:
+        pass
 
 def get_connection():
     return mysql.connector.connect(
         host=os.getenv("MYSQLHOST"),
-        port=int(os.getenv("MYSQLPORT")),
+        port=int(os.getenv("MYSQLPORT", 3306)),
         user=os.getenv("MYSQLUSER"),
         password=os.getenv("MYSQLPASSWORD"),
         database=os.getenv("MYSQLDATABASE"),
         autocommit=True
     )
 
-
 def crear_tabla_liquidaciones_oca():
-    try:
-        conn = get_connection()
-        cursor = conn.cursor()
+    conn = get_connection()
+    cursor = conn.cursor()
 
-        sql = """
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS liquidaciones_oca (
             id INT AUTO_INCREMENT PRIMARY KEY,
-            tanque VARCHAR(20),
-            api DECIMAL(6,2),
-            temperatura DECIMAL(6,2),
-            volumen_recibido DECIMAL(12,2),
-            volumen_calculado DECIMAL(12,2),
-            tolerancia DECIMAL(12,2),
-            diferencia DECIMAL(12,2),
-            resultado VARCHAR(20),
-            fecha DATETIME,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );
-        """
+            tanque VARCHAR(50),
+            api FLOAT,
+            temperatura FLOAT,
+            volumen_recibido FLOAT,
+            volumen_calculado FLOAT,
+            tolerancia FLOAT,
+            diferencia FLOAT,
+            resultado VARCHAR(50),
+            fecha DATETIME
+        )
+    """)
 
-        cursor.execute(sql)
-        cursor.close()
-        conn.close()
-
-        print("✅ Tabla liquidaciones_oca verificada / creada correctamente")
-
-    except Error as e:
-        print("❌ Error creando tabla liquidaciones_oca:", e)
+    cursor.close()
+    conn.close()
