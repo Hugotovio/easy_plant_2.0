@@ -1,4 +1,4 @@
-from db import get_connection
+from modelo.DB.db import get_connection,crear_tabla_liquidaciones_ctg
 
 def guardar_liquidacion(
     tanque,
@@ -9,10 +9,11 @@ def guardar_liquidacion(
     api_observado,
     api_corregido,
     temperatura,
-    resultado,
     fecha,
     hora
-):
+):  
+    crear_tabla_liquidaciones_ctg()
+    print("Guardando liquidación en la base de datos...")
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -26,7 +27,6 @@ def guardar_liquidacion(
             api_observado,
             api_corregido,
             temperatura,
-            resultado,
             fecha,
             hora
         )
@@ -42,7 +42,6 @@ def guardar_liquidacion(
         api_observado,
         api_corregido,
         temperatura,
-        resultado,
         fecha,
         hora
     )

@@ -8,6 +8,7 @@ import pytz
 
 
 
+
 app = Flask(__name__)
 # Inicializar la base de datos al iniciar la aplicación
 
@@ -125,23 +126,6 @@ def calculate():
 
         fecha_liberacion = hora_liberacion.strftime('%d-%m-%Y')
         hora_liberacion_formateada = hora_liberacion.strftime('%H:%M')
-
-        # -------------------------
-        # GUARDAR EN MYSQL
-        # -------------------------
-        """
-        guardar_liquidacion({
-            "tanque": numerotk,
-            "api": api_observado,
-            "temperatura": temperatura,
-            "volumen_recibido": volumen_recibido,
-            "volumen_calculado": vol_neto_rec,
-            "tolerancia": tolerancia,
-            "diferencia": diferencia,
-            "resultado": resultado,
-            "fecha": tiempo_actual
-        })
-        """
         
         # ###
 
@@ -169,21 +153,6 @@ def calculate():
     except Exception as e:
         return jsonify({'error': str(e)})
 
-
-# =========================
-# INVENTARIO ACTUAL ✅
-# =========================
-@app.route('/inventario', methods=['GET'])
-def inventario():
-    try:
-        data = obtener_inventario_actual()
-        return jsonify(data)
-    except Exception as e:
-        return jsonify({'error': str(e)})
-
-@app.route("/inventario-vista")
-def inventario_vista():
-    return render_template("inventario.html")
 # =========================
 # MAIN
 # =========================
