@@ -5,8 +5,14 @@ from datos import DataLoader
 from datetime import datetime, timedelta
 import os
 import pytz
+import requests
+from dotenv import load_dotenv
 
-
+load_dotenv()
+FASTAPI_URL = os.getenv("FASTAPI_URL")
+  
+if not FASTAPI_URL:
+    raise ValueError("La variable de entorno FASTAPI_URL no está definida. Por favor, configúrala en el archivo .env")
 
 
 app = Flask(__name__)
@@ -126,7 +132,27 @@ def calculate():
 
         fecha_liberacion = hora_liberacion.strftime('%d-%m-%Y')
         hora_liberacion_formateada = hora_liberacion.strftime('%H:%M')
-        
+        # -------------------------
+# ENVIAR DATOS A FASTAPI
+# -------------------------
+        try:
+            fastapi_payload = {
+            "tanque": str(numerotk),
+            "altura_inicial": int(altura_inicial),
+            "altura_final": int(altura_final),
+            "volumen_bruto": float(vol_br_rec),
+            "volumen_neto": float(vol_neto_rec),
+            "api_observado": float(api_observado),
+            "api_corregido": float(api_corregido),
+            "temperatura": float(temperatura),
+           
+        }
+
+            response = requests.post(FASTAPI_URL, json=fastapi_payload)
+            response.raise_for_status()  # Esto arroja error si FastAPI responde con status != 2xx
+
+        except requests.exceptions.RequestException as e:
+            print(f"No se pudo enviar a FastAPI: {e}")
         # ###
 
         # -------------------------

@@ -1,127 +1,183 @@
-import math
-import requests
+from flask import Flask, render_template, request, jsonify
+from aforo import CalculadoraTanque
+from api import ApiCorreccion
 from datos import DataLoader
+from datetime import datetime, timedelta
+import os
+import pytz
+import requests
+from dotenv import load_dotenv
 
-class CalculadoraTanque:
-    def __init__(self,altura_inicial,volumen_bruto_recibido,tanque):
-        self.altura_inicial=altura_inicial
-        self.volumen_bruto_recibido=volumen_bruto_recibido
-        self.tanque=tanque
-
-    
-    
-    def mostrar_volumen_prueba(self,diccionario,medida):
-        return diccionario.get(str(medida))
-    
-    def mostrar_altura_1(self, volumen, diccionario):
-        if volumen == 0:
-            return 0.0
-
-        # Inicializar variables para el mínimo y la clave correspondiente
-        clave_cercana = None
-        diferencia_minima = float('inf')
-
-        for key, value in diccionario.items():
-            diferencia = abs(value - volumen)
-            if diferencia < diferencia_minima:
-                diferencia_minima = diferencia
-                clave_cercana = key
-
-        if clave_cercana is None:
-            raise ValueError(f"No se encontró una altura correspondiente al volumen {volumen}.")
-
-        return (clave_cercana)
-
-            
-        
-    def mostrar_volumen(self, diccionario,numero ):
-        if numero == 0:
-            return 0
-
-        if str(numero) in diccionario:
-            nr=numero/10
-            parte_decimal, parte_entera = math.modf(nr)
-            claves=[parte_entera,parte_decimal]
-            
-
-        if 11 <= numero <= 99:
-            primer_digito = numero // 10
-            segundo_digito = (numero % 10) / 10
-            claves = [primer_digito, segundo_digito]
-
-            suma = sum(diccionario.get(str(clave), 0) for clave in claves)
-            return round(suma, 2)
-        if 1 <= numero <= 9:
-            primer_digito = numero / 10
-            claves = [primer_digito]
-
-            suma = sum(diccionario.get(str(clave), 0) for clave in claves)
-            return round(suma, 2)
-
-        claves = [math.floor(numero / 100) * 10]
-        if numero >= 100:
-            n = str(numero)
-            claves.extend([int(n[2]), int(n[3]) / 10] if len(n) > 3 else [int(n[1]), int(n[2]) / 10])
-        
-        suma = sum(diccionario.get(str(clave), 0) for clave in claves)
-        return round(suma, 2)
+FASTAPI_URL="https://easybackend-production-5720.up.railway.app/api/v1/liquidacion/"
 
 
+app = Flask(__name__)
+# Inicializar la base de datos al iniciar la aplicación
 
 
-    def mostrar_altura(self, volume, aforo):
-        aforo_tanque=self.preprocesar_datos(aforo)
-        sorted_heights = sorted(aforo_tanque.keys())
-        lower_height = None
-        upper_height = None
-        
-        for i in range(len(sorted_heights) - 1):
-            h1 = sorted_heights[i]
-            h2 = sorted_heights[i + 1]
-            
-            v1 = aforo_tanque[h1]
-            v2 = aforo_tanque[h2]
-            
-            if v1 <= volume <= v2:
-                lower_height = h1
-                upper_height = h2
-                break  # Una vez encontrado el rango, podemos salir del bucle
-        
-        if lower_height is None or upper_height is None:
-            return None  # El volumen está fuera del rango de datos
-        
-        v1 = aforo_tanque[lower_height]
-        v2 = aforo_tanque[upper_height]
-        
-        height = lower_height + (volume - v1) * ((upper_height - lower_height) / (v2 - v1))
-        altura_found=math.floor(height*10)
-       
-      
-        return round(altura_found)
-    
-    def preprocesar_datos(self,aforo_tanque_json):
-        """
-        Convierte un diccionario JSON con claves en formato de cadena a claves numéricas (int o float).
-        """
-        aforo_tanque = {}
-        for key, value in aforo_tanque_json.items():
-            try:
-                # Intenta convertir la clave a un número
-                numeric_key = float(key)
-                aforo_tanque[numeric_key] = value
-            except ValueError:
-                # Si no se puede convertir, maneja el error aquí
-                print(f"Advertencia: La clave '{key}' no es un número válido y será ignorada.")
-        return aforo_tanque
-
-    def get_altura_final(self,altura,dict,vol_br):
-       pass
-        
-    """ def numero_mas_cercano(self,lista, objetivo):
-        if not lista:
-            return None  # Devuelve None si la lista está vacía
-
-        return min(lista, key=lambda x: abs(x - objetivo))"""
-   
+# =========================
+# RUTA PRINCIPAL
+# =========================
+@app.route('/')
+def index():
+    return render_template('easy.html')
 
 
+# =========================
+# CALCULAR Y GUARDAR
+# =========================
+@app.route('/calculate', methods=['POST'])
+def calculate():
+    try:
+        data = request.json
+
+        # -------------------------
+        # VALIDACIONES BÁSICAS
+        # -------------------------
+        numerotk = int(data['numero'])
+        if numerotk not in [8, 9, 10]:
+            return jsonify({'error': 'Número de tanque no válido. Debe ser 8, 9 o 10.'})
+
+        altura_inicial = int(data['altura_inicial'])
+        volumen_recibido = float(data['volumen_recibido'])
+
+        def redondear_al_mas_cercano_05(valor):
+            return round(valor * 2) / 2
+
+        api_observado = redondear_al_mas_cercano_05(float(data['api_observado']))
+        temperatura = float(data.get('temperatura', 0))
+
+        if not (25 <= api_observado <= 65):
+            return jsonify({'error': 'El valor de API debe estar entre 25 y 65.'})
+
+        if not (55 <= temperatura <= 100):
+            return jsonify({'error': 'La temperatura debe estar entre 55 y 100 °F.'})
+
+        # -------------------------
+        # FECHA Y HORA (COLOMBIA)
+        # -------------------------
+        zona_horaria = pytz.timezone('America/Bogota')
+        hora_finalizacion = data.get('hora_finalizacion')
+
+        if hora_finalizacion:
+            hora_finalizacion = datetime.strptime(hora_finalizacion, '%H:%M').time()
+            fecha_actual = datetime.now(zona_horaria).date()
+            tiempo_actual = zona_horaria.localize(
+                datetime.combine(fecha_actual, hora_finalizacion)
+            )
+        else:
+            tiempo_actual = datetime.now(zona_horaria)
+
+        # -------------------------
+        # CARGA TABLAS AFORO
+        # -------------------------
+        tks = DataLoader(".")
+        if numerotk == 8:
+            datos_path = "aforo_tk_08.json"
+        elif numerotk == 9:
+            datos_path = "aforo_tk_09.json"
+        else:
+            datos_path = "aforo_tk_10.json"
+
+        aforo_tks = tks.load_file(datos_path)
+
+        # -------------------------
+        # CÁLCULOS DE VOLUMEN
+        # -------------------------
+        obAforo = CalculadoraTanque(altura_inicial, volumen_recibido, aforo_tks)
+        vol_1 = obAforo.calcular_volumen(aforo_tks, altura_inicial)
+        if vol_1 is None:
+            return jsonify({'error': 'La altura inicial está fuera de rango.'})
+
+        vol = vol_1 + volumen_recibido
+        if vol > list(aforo_tks.values())[-1]:
+            return jsonify({'error': 'Volumen final fuera de rango.'})
+
+        altura_final = obAforo.calcular_altura(vol, aforo_tks)
+        if altura_final is None:
+            return jsonify({'error': 'No se pudo calcular la altura final.'})
+
+        vol_final = obAforo.calcular_volumen(aforo_tks, altura_final)
+        if vol_final is None:
+            return jsonify({'error': 'No se pudo calcular el volumen final.'})
+
+        # -------------------------
+        # API CORREGIDO
+        # -------------------------
+        vol_br_rec = vol_final - vol_1
+        api = ApiCorreccion(api_observado, temperatura)
+        api_corregido, fac_cor = api.corregir_correccion()
+        vol_neto_rec = vol_br_rec * fac_cor
+
+        # -------------------------
+        # RESULTADO / TOLERANCIA
+        # -------------------------
+        tolerancia = volumen_recibido * 0.002
+        diferencia = vol_neto_rec - volumen_recibido
+        resultado = "FALTANTE" if diferencia < -tolerancia else "CONFORME"
+
+        # -------------------------
+        # CÁLCULO FECHA / HORA LIBERACIÓN
+        # -------------------------
+        horas_para_liberar = (int(altura_final) / 1000) * 3
+        if horas_para_liberar >= 24:
+            horas_para_liberar = 24
+
+        hora_liberacion = tiempo_actual + timedelta(hours=horas_para_liberar)
+        hora_liberacion = zona_horaria.normalize(hora_liberacion)
+
+        fecha_liberacion = hora_liberacion.strftime('%d-%m-%Y')
+        hora_liberacion_formateada = hora_liberacion.strftime('%H:%M')
+        # -------------------------
+# ENVIAR DATOS A FASTAPI
+# -------------------------
+        try:
+            fastapi_payload = {
+            "tanque": str(numerotk),
+            "altura_inicial": int(altura_inicial),
+            "altura_final": int(altura_final),
+            "volumen_bruto": float(vol_br_rec),
+            "volumen_neto": float(vol_neto_rec),
+            "api_observado": float(api_observado),
+            "api_corregido": float(api_corregido),
+            "temperatura": float(temperatura),
+           
+        }
+
+            response = requests.post(FASTAPI_URL, json=fastapi_payload)
+            response.raise_for_status()  # Esto arroja error si FastAPI responde con status != 2xx
+
+        except requests.exceptions.RequestException as e:
+            print(f"No se pudo enviar a FastAPI: {e}")
+        # ###
+
+        # -------------------------
+        # RESPUESTA
+        # -------------------------
+        return jsonify({
+            'altura_inicial': altura_inicial,
+            'volumen_inicial': vol_1,
+            'altura_final': altura_final,
+            'volumen_final': vol_final,
+            'volumen_br_rec': vol_br_rec,
+            'temperatura': temperatura,
+            'api_observado': api_observado,
+            'api_corregido': api_corregido,
+            'fac_cor': fac_cor,
+            'vol_neto_rec': vol_neto_rec,
+            'resultado': resultado,
+            'fecha_finalizacion_recibo': tiempo_actual.strftime('%d-%m-%Y'),
+            'hora_finalizacion_recibo': tiempo_actual.strftime('%H:%M'),
+            'fecha_liberacion': fecha_liberacion,
+            'hora_liberacion': hora_liberacion_formateada
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)})
+
+# =========================
+# MAIN
+# =========================
+if __name__ == '__main__':
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
