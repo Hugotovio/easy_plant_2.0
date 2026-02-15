@@ -3,17 +3,13 @@ from aforo import CalculadoraTanque
 from api import ApiCorreccion
 from datos import DataLoader
 from datetime import datetime, timedelta
-import os
 import pytz
+import os
 import requests
-from dotenv import load_dotenv
 
-FASTAPI_URL="https://easybackend-production-5720.up.railway.app/api/v1/liquidacion/"
-
+FASTAPI_URL = "http://127.0.0.1:8000/api/v1/liquidacion/"
 
 app = Flask(__name__)
-# Inicializar la base de datos al iniciar la aplicación
-
 
 # =========================
 # RUTA PRINCIPAL
@@ -21,7 +17,6 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     return render_template('easy.html')
-
 
 # =========================
 # CALCULAR Y GUARDAR
@@ -57,17 +52,9 @@ def calculate():
         # FECHA Y HORA (COLOMBIA)
         # -------------------------
         zona_horaria = pytz.timezone('America/Bogota')
-        hora_finalizacion = data.get('hora_finalizacion')
-
-        if hora_finalizacion:
-            hora_finalizacion = datetime.strptime(hora_finalizacion, '%H:%M').time()
-            fecha_actual = datetime.now(zona_horaria).date()
-            tiempo_actual = zona_horaria.localize(
-                datetime.combine(fecha_actual, hora_finalizacion)
-            )
-        else:
-            tiempo_actual = datetime.now(zona_horaria)
-
+        tiempo_actual = datetime.now(zona_horaria)
+        
+        
         # -------------------------
         # CARGA TABLAS AFORO
         # -------------------------
@@ -128,31 +115,40 @@ def calculate():
 
         fecha_liberacion = hora_liberacion.strftime('%d-%m-%Y')
         hora_liberacion_formateada = hora_liberacion.strftime('%H:%M')
+    
+
+        if volumen_recibido > 0 and volumen_recibido > 10000:
+            
+            try:
+                fastapi_payload = {
+                    "tanque": str(numerotk),
+                    "altura_inicial": int(altura_inicial),
+                    "altura_final": int(altura_final),
+                    "volumen_bruto": volumen_recibido,
+                    "volumen_neto": float(vol_neto_rec),
+                    "api_observado": float(api_observado),
+                    "api_corregido": float(api_corregido),
+                    "factor_correccion": float(fac_cor),
+                    "temperatura": float(temperatura),
+                    "fecha_finalizacion": tiempo_actual.strftime('%d-%m-%Y'),
+                    "hora_finalizacion": tiempo_actual.strftime('%H:%M:%S'),
+                    "fecha_liberacion": fecha_liberacion,
+                    "hora_liberacion": hora_liberacion_formateada,
+                   
+                }
+    
+                response = requests.post(FASTAPI_URL, json=fastapi_payload)
+                response.raise_for_status()
+                print("Datos enviados correctamente a FastAPI")
+                print(response.json())
+            except requests.exceptions.RequestException as e:
+                print(f"No se pudo enviar a FastAPI: {e}")
+        
+
+
+
         # -------------------------
-# ENVIAR DATOS A FASTAPI
-# -------------------------
-        try:
-            fastapi_payload = {
-            "tanque": str(numerotk),
-            "altura_inicial": int(altura_inicial),
-            "altura_final": int(altura_final),
-            "volumen_bruto": float(vol_br_rec),
-            "volumen_neto": float(vol_neto_rec),
-            "api_observado": float(api_observado),
-            "api_corregido": float(api_corregido),
-            "temperatura": float(temperatura),
-           
-        }
-
-            response = requests.post(FASTAPI_URL, json=fastapi_payload)
-            response.raise_for_status()  # Esto arroja error si FastAPI responde con status != 2xx
-
-        except requests.exceptions.RequestException as e:
-            print(f"No se pudo enviar a FastAPI: {e}")
-        # ###
-
-        # -------------------------
-        # RESPUESTA
+        # RESPUESTA A FRONTEND
         # -------------------------
         return jsonify({
             'altura_inicial': altura_inicial,

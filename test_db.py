@@ -1,24 +1,11 @@
-from dotenv import load_dotenv
-import os
-import mysql.connector
+import pytz
+from datetime import datetime
 
-load_dotenv()
+zona_horaria = pytz.timezone('America/Bogota')
+tiempo_actual = datetime.now(zona_horaria)
 
-print("MYSQLHOST:", os.getenv("MYSQLHOST"))
-print("MYSQLPORT:", os.getenv("MYSQLPORT"))
-print("MYSQLUSER:", os.getenv("MYSQLUSER"))
-print("MYSQLDATABASE:", os.getenv("MYSQLDATABASE"))
+def hora():
+    hora_str = tiempo_actual.strftime('%H:%M:%S')  # solo hora:minutos:segundos
+    print(hora_str)
 
-try:
-    conn = mysql.connector.connect(
-        host=os.getenv("MYSQLHOST"),
-        port=int(os.getenv("MYSQLPORT")),
-        user=os.getenv("MYSQLUSER"),
-        password=os.getenv("MYSQLPASSWORD"),
-        database=os.getenv("MYSQLDATABASE"),
-        connection_timeout=5
-    )
-    print("✅ Conexión exitosa a MySQL Railway")
-    conn.close()
-except Exception as e:
-    print("❌ Error de conexión:", e)
+hora()
