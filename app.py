@@ -59,7 +59,14 @@ def calculate():
         # -------------------------
         zona_horaria = pytz.timezone('America/Bogota')
         tiempo_actual = datetime.now(zona_horaria)
-        
+        hora_finalizacion = data.get('hora_finalizacion')
+        zona_horaria = pytz.timezone('America/Bogota')
+        if hora_finalizacion: 
+            hora_finalizacion = datetime.strptime(hora_finalizacion, '%H:%M').time()
+            fecha_actual = datetime.now(zona_horaria).date() 
+            tiempo_actual = datetime.combine(fecha_actual, hora_finalizacion) 
+            tiempo_actual = zona_horaria.localize(tiempo_actual) 
+        else: tiempo_actual = datetime.now(zona_horaria)
         
         # -------------------------
         # CARGA TABLAS AFORO
