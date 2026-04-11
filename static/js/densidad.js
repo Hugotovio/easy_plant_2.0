@@ -38,7 +38,7 @@ function calcularDensidad() {
             font-size: 14px;
           ">
             <thead>
-              <tr style="border-bottom: 1px solid #ddd;">
+              <tr style="border-bottom: 1px solid #fd7c7c;">
                 <th style="text-align: left; padding: 6px;">Unidad</th>
                 <th style="text-align: right; padding: 6px;">Valor</th>
               </tr>
