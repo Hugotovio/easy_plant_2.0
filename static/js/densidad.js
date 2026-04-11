@@ -46,6 +46,11 @@ function calcularDensidad() {
             <span>g/cm³:</span>
             <span>${d.g_cm3.toFixed(4)}</span>
           </div>
+          
+          <div style="display: flex; justify-content: space-between;">
+            <span>lb/gal:</span>
+            <span>${d.lb_gal.toFixed(3)}</span>
+          </div>
         </div>
       `;
     }
