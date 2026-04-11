@@ -16,7 +16,7 @@ function calcularDensidad() {
 
     if (data.error) {
       document.getElementById("resultadoDensidad").innerHTML =
-        `<div class="text-danger">${data.error}</div>`;
+        `<div style="color:red;">${data.error}</div>`;
     } else {
       const d = data.densidad;
 
@@ -26,37 +26,48 @@ function calcularDensidad() {
           border-radius: 10px;
           padding: 15px;
           box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-          max-width: 300px;
+          max-width: 350px;
         ">
           <div style="font-weight: bold; margin-bottom: 10px; color: #333;">
             Densidad
           </div>
 
-          <div style="display: flex; justify-content: space-between;">
-            <span>kg/gal:</span>
-            <span>${d.kg_gal.toFixed(3)}</span>
-          </div>
-
-          <div style="display: flex; justify-content: space-between;">
-            <span>kg/m³:</span>
-            <span>${d.kg_m3.toFixed(2)}</span>
-          </div>
-
-          <div style="display: flex; justify-content: space-between;">
-            <span>g/cm³:</span>
-            <span>${d.g_cm3.toFixed(4)}</span>
-          </div>
-          
-          <div style="display: flex; justify-content: space-between;">
-            <span>lb/gal:</span>
-            <span>${d.lb_gal.toFixed(3)}</span>
-          </div>
+          <table style="
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+          ">
+            <thead>
+              <tr style="border-bottom: 1px solid #ddd;">
+                <th style="text-align: left; padding: 6px;">Unidad</th>
+                <th style="text-align: right; padding: 6px;">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="padding: 6px;">kg/gal</td>
+                <td style="padding: 6px; text-align: right;">${d.kg_gal.toFixed(3)}</td>
+              </tr>
+              <tr style="background: #f1f1f1;">
+                <td style="padding: 6px;">kg/m³</td>
+                <td style="padding: 6px; text-align: right;">${d.kg_m3.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px;">g/cm³</td>
+                <td style="padding: 6px; text-align: right;">${d.g_cm3.toFixed(4)}</td>
+              </tr>
+              <tr style="background: #f1f1f1;">
+                <td style="padding: 6px;">lb/gal</td>
+                <td style="padding: 6px; text-align: right;">${d.lb_gal.toFixed(3)}</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       `;
     }
   })
   .catch(() => {
     document.getElementById("resultadoDensidad").innerHTML =
-      `<div class="text-danger">Error de conexión</div>`;
+      `<div style="color:red;">Error de conexión</div>`;
   });
 }
