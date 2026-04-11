@@ -7,7 +7,7 @@ function calcularDensidad() {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       temperatura: Number(temperatura),
-      api: Number(api)   // 🔥 CORREGIDO
+      api: Number(api)
     })
   })
   .then(res => res.json())
@@ -16,15 +16,42 @@ function calcularDensidad() {
 
     if (data.error) {
       document.getElementById("resultadoDensidad").innerHTML =
-        `<span class="text-danger">${data.error}</span>`;
+        `<div class="text-danger">${data.error}</div>`;
     } else {
-      // 🔥 CORREGIDO (AQUÍ ESTÁ LA CLAVE)
-      document.getElementById("resultadoDensidad").innerHTML =
-        `Densidad: ${data.densidad_base.toFixed(3)} kg/gal`;
+      const d = data.densidad;
+
+      document.getElementById("resultadoDensidad").innerHTML = `
+        <div style="
+          background: #f8f9fa;
+          border-radius: 10px;
+          padding: 15px;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+          max-width: 300px;
+        ">
+          <div style="font-weight: bold; margin-bottom: 10px; color: #333;">
+            Densidad
+          </div>
+
+          <div style="display: flex; justify-content: space-between;">
+            <span>kg/gal:</span>
+            <span>${d.kg_gal.toFixed(3)}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between;">
+            <span>kg/m³:</span>
+            <span>${d.kg_m3.toFixed(2)}</span>
+          </div>
+
+          <div style="display: flex; justify-content: space-between;">
+            <span>g/cm³:</span>
+            <span>${d.g_cm3.toFixed(4)}</span>
+          </div>
+        </div>
+      `;
     }
   })
   .catch(() => {
     document.getElementById("resultadoDensidad").innerHTML =
-      `<span class="text-danger">Error de conexión</span>`;
+      `<div class="text-danger">Error de conexión</div>`;
   });
 }
