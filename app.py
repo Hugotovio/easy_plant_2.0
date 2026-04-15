@@ -129,8 +129,8 @@ def calculate():
         fecha_liberacion = hora_liberacion.strftime('%d-%m-%Y')
         hora_liberacion_formateada = hora_liberacion.strftime('%H:%M')
     
-
-        if volumen_recibido > 0 and volumen_recibido > 10000:
+        GUARDAR_LIQUIDACION = False
+        if GUARDAR_LIQUIDACION and volumen_recibido > 0 and volumen_recibido > 10000:
             
             try:
                 fastapi_payload = {
